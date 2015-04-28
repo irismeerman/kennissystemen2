@@ -7,10 +7,61 @@
 :- op(700, xfx, before_or_concurrent).
 :- op(700, xfx, concurrent_or_after).
 
+:- dynamic(event/1).
+:- dynamic(relation/1).
+
 ask:-
     read(UserInput),
-    assert(event(UserInput)).
+    checkDuplicates(UserInput), !, 
+    assert(UserInput),
+    write(UserInput).
 
+trans:-
+	event(X), event(Y), event(Z),
+	X \= Y, X \= Z, Y \= Z,
+	relation((X before Y)),
+	relation((Y before Z)),
+	assert(relation(X before Z)).
+
+checkDuplicates(Input):-
+	\+ Input.
+
+makeList:-
+	findall(X, relation(X), Lijst),
+	prettyPrint(Lijst).
+
+prettyPrint([ Rel1 | Relaties] ):-
+	rewrite(Rel1),
+	prettyPrint(Relaties).
+	
+rewrite(X before Y):-
+	write(X),
+	write(' - '),
+	write(Y).
+
+rewrite(X after Y):-
+	write(Y),
+	write(' - '),
+	write(X).
+	
+rewrite(X concurrent Y):-
+	write(X),
+	write(', '),
+	write(Y).
+
+go1:-
+	assert(event('a')),
+	assert(event('b')),
+	assert(event('c')),
+	assert(relation(a before b)),
+	assert(relation(b before c)).
+
+go2:-
+	assert(event('a')),
+	assert(event('b')),
+	assert(event('c')),
+	assert(relation(b after a)),
+	assert(relation(b concurrent c)).
 
 
 
