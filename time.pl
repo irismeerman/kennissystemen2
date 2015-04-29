@@ -14,23 +14,30 @@ ask:-
     read(UserInput),
     checkDuplicates(UserInput), !, 
     assert(UserInput),
-    write(UserInput).
+    trans.
+
+%ask:-
+%	write('Dit staat al in de knowledgebase. Probeer opnieuw.\n').
 
 trans:-
 	event(X), event(Y), event(Z),
 	X \= Y, X \= Z, Y \= Z,
 	relation((X before Y)),
 	relation((Y before Z)),
-	assert(relation(X before Z)).
+	assert(relation(X before Z)),
+	write('Transitieve relaties zijn toegevoegd.\n').
+
+trans:-
+	write('Geen transitieve relaties toegevoegd.\n').
 
 checkDuplicates(Input):-
 	\+ Input.
 
-makeList:-
+prettyPrint:-
 	findall(X, relation(X), Lijst),
-	prettyPrint(Lijst).
+	prettyPrint2(Lijst).
 
-prettyPrint([ Rel1 | Relaties] ):-
+prettyPrint2([ Rel1 | Relaties] ):-
 	rewrite(Rel1),
 	prettyPrint(Relaties).
 	
@@ -49,19 +56,29 @@ rewrite(X concurrent Y):-
 	write(', '),
 	write(Y).
 
+rewrite(X before_or_concurrent Y):-
+	rewrite(X before Y), nl,
+	rewrite(X concurrent Y).
+
+rewrite(X concurrent_or_after Y):-
+	rewrite(X concurrent Y), nl,
+	rewrite(X after Y).
+
 go1:-
 	assert(event('a')),
 	assert(event('b')),
 	assert(event('c')),
 	assert(relation(a before b)),
-	assert(relation(b before c)).
+	assert(relation(b before c)),
+	trans.
 
 go2:-
 	assert(event('a')),
 	assert(event('b')),
 	assert(event('c')),
 	assert(relation(b after a)),
-	assert(relation(b concurrent c)).
+	assert(relation(b concurrent c)),
+	trans.
 
 
 
