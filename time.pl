@@ -14,20 +14,29 @@ ask:-
     read(UserInput),
     checkDuplicates(UserInput), !, 
     assert(UserInput),
-    trans.
+    trans,
+    prettyPrint.
 
 ask:-
 	write('Dit staat al in de knowledgebase. Probeer opnieuw.\n').
 
+operators([after, before, concurrent]).
+
+is_operator(X):-
+	operators(List),
+	member(X, List), !.
+
 trans:-
+	%is_operator(Op),
+	%write(Op),
 	event(X), event(Y), event(Z),
 	X \= Y, X \= Z, Y \= Z,
 	relation((X before Y)),
 	relation((Y before Z)),
-	assert(relation(X before Z)),
 	checkDuplicates(relation(X before Z)),
+	assert(relation(X before Z)),
 	write(relation(X before Z)),
-	write(' relatie is toegevoegd (transitief).\n') ,!. 
+	write(' is toegevoegd aan de database.\n') ,!, trans. 
 
 trans:-
 	write('Geen transitieve relaties toegevoegd.\n'), !.
@@ -41,29 +50,29 @@ prettyPrint:-
 
 prettyPrint2([ Rel1 | Relaties] ):-
 	rewrite(Rel1),
-	prettyPrint(Relaties).
+	prettyPrint2(Relaties).
 	
 rewrite(X before Y):-
 	write(X),
 	write(' - '),
-	write(Y).
+	write(Y), nl.
 
 rewrite(X after Y):-
 	write(Y),
 	write(' - '),
-	write(X).
+	write(X), nl.
 	
 rewrite(X concurrent Y):-
 	write(X),
 	write(', '),
-	write(Y).
+	write(Y), nl.
 
 rewrite(X before_or_concurrent Y):-
-	rewrite(X before Y), nl,
+	rewrite(X before Y),
 	rewrite(X concurrent Y).
 
 rewrite(X concurrent_or_after Y):-
-	rewrite(X concurrent Y), nl,
+	rewrite(X concurrent Y), 
 	rewrite(X after Y).
 
 go1:-
@@ -72,7 +81,8 @@ go1:-
 	assert(event('c')),
 	assert(relation(a before b)),
 	assert(relation(b before c)),
-	trans.
+	trans,
+	prettyPrint.
 
 go2:-
 	assert(event('a')),
@@ -80,7 +90,8 @@ go2:-
 	assert(event('c')),
 	assert(relation(b after a)),
 	assert(relation(b concurrent c)),
-	trans.
+	trans,
+	prettyPrint.
 
 
 
