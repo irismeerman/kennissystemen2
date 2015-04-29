@@ -16,8 +16,8 @@ ask:-
     assert(UserInput),
     trans.
 
-%ask:-
-%	write('Dit staat al in de knowledgebase. Probeer opnieuw.\n').
+ask:-
+	write('Dit staat al in de knowledgebase. Probeer opnieuw.\n').
 
 trans:-
 	event(X), event(Y), event(Z),
@@ -25,10 +25,12 @@ trans:-
 	relation((X before Y)),
 	relation((Y before Z)),
 	assert(relation(X before Z)),
-	write('Transitieve relaties zijn toegevoegd.\n').
+	checkDuplicates(relation(X before Z)),
+	write(relation(X before Z)),
+	write(' relatie is toegevoegd (transitief).\n') ,!. 
 
 trans:-
-	write('Geen transitieve relaties toegevoegd.\n').
+	write('Geen transitieve relaties toegevoegd.\n'), !.
 
 checkDuplicates(Input):-
 	\+ Input.
