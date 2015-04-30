@@ -12,13 +12,20 @@
 
 ask:-
     read(UserInput),
-    checkDuplicates(UserInput), !, 
-    assert(UserInput),
+    parse(UserInput),
     trans,
     prettyPrint.
 
 ask:-
 	write('Dit staat al in de knowledgebase. Probeer opnieuw.\n').
+
+parse(relation(X after Y)):-
+	checkDuplicates(relation(Y before X)), !, 
+  assert(relation(Y before X)).	
+
+parse(UserInput):-
+  checkDuplicates(UserInput), !, 
+  assert(UserInput).
 
 operators([after, before, concurrent]).
 
