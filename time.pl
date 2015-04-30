@@ -50,6 +50,10 @@ trans:-
 trans:-
 	write('Geen transitieve relaties meer om toe te voegen.\n'), !.
 
+
+% checkDuplicates/1 takes an event of relation and checks whether it should be added to our database. 
+% For all cases, data should not be added when it already occurs in the database.
+% For concurrent relations, the opposite should not yet exist in the database as well.
 checkDuplicates(Input):-
 	\+ Input,
 	((Input = relation(X concurrent Y),
@@ -77,7 +81,9 @@ prettyPrint:-
 prettyPrint2([ Rel1 | Relaties] ):-
 	rewrite(Rel1),
 	prettyPrint2(Relaties).
-	
+
+
+% Rewrite/1 rewrites several relation types in a way that can be implemented in the timeline.
 rewrite(X before Y):-
 	write(X),
 	write(' - '),
@@ -94,7 +100,7 @@ rewrite(X before_or_concurrent Y):-
 
 rewrite(X concurrent_or_after Y):-
 	rewrite(X concurrent Y), 
-	rewrite(X after Y).
+	rewrite(Y before X).
 
 go1:-
 	assert(event('a')),
@@ -109,7 +115,7 @@ go2:-
 	assert(event('a')),
 	assert(event('b')),
 	assert(event('c')),
-	assert(relation(b after a)),
+	assert(relation(a before b)),
 	assert(relation(b concurrent c)),
 	trans,
 	prettyPrint.
