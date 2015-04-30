@@ -12,24 +12,13 @@
 
 ask:-
     read(UserInput),
-    parse(UserInput, Rewritten),
-    checkDuplicates(Rewritten), !, 
-    assert(URewritten),
+    checkDuplicates(UserInput), !, 
+    assert(UserInput),
     trans,
     prettyPrint.
 
-parse(relation(X after Y), relation(Y before X)).
-
-
-
 ask:-
 	write('Dit staat al in de knowledgebase. Probeer opnieuw.\n').
-
-operators([after, before, concurrent]).
-
-is_operator(X):-
-	operators(List),
-	member(X, List), !.
 
 trans:-
 	event(X), event(Y), event(Z),
@@ -42,17 +31,7 @@ trans:-
 	write(' is toegevoegd aan de database.\n') ,!, trans. 
 
 trans:-
-	event(X), event(Y), event(Z),
-	X \= Y, X \= Z, Y \= Z,
-	relation((X after Y)),
-	relation((Y after Z)),
-	checkDuplicates(relation(X before Z)),
-	assert(relation(X before Z)),
-	write(relation(X before Z)),
-	write(' is toegevoegd aan de database.\n') ,!, trans. 
-
-trans:-
-	write('Geen transitieve relaties meer om toe te voegen.\n'), !.
+	write('Geen transitieve relaties toegevoegd.\n'), !.
 
 checkDuplicates(Input):-
 	\+ Input.
@@ -68,24 +47,23 @@ prettyPrint2([ Rel1 | Relaties] ):-
 rewrite(X before Y):-
 	write(X),
 	write(' - '),
-	write(Y), nl.
+	write(Y).
 
 rewrite(X after Y):-
-	write(Y),
-	write(' - '),
-	write(X), nl.
-	
+	retract(X after Y),
+	assert(relation(X before Y)).
+
 rewrite(X concurrent Y):-
 	write(X),
 	write(', '),
-	write(Y), nl.
+	write(Y).
 
 rewrite(X before_or_concurrent Y):-
-	rewrite(X before Y),
+	rewrite(X before Y), nl,
 	rewrite(X concurrent Y).
 
 rewrite(X concurrent_or_after Y):-
-	rewrite(X concurrent Y), 
+	rewrite(X concurrent Y), nl,
 	rewrite(X after Y).
 
 go1:-
@@ -106,32 +84,3 @@ go2:-
 	trans,
 	prettyPrint.
 
-
-
-/* --- A simple forward chaining rule interpreter --- */
-
-%% forward:-
-%%     new_derived_fact( P ),
-%%     !,
-%%     write( 'Derived:' ), write_ln( P ),
-%%     assert( fact( P )),
-%%     forward
-%%     ;
-%%     nl.
-
-%% new_derived_fact( Conclusion ):-
-%%     if Condition then Conclusion,
-%%     not( fact( Conclusion ) ),
-%%     composed_fact( Condition ).
-
-%% composed_fact( Condition ):-
-%%     fact( Condition ).
-
-%% composed_fact( Condition1 and Condition2 ):-
-%%     composed_fact( Condition1 ),
-%%     composed_fact( Condition2 ).
-
-%% composed_fact( Condition1 or Condition2 ):-
-%%     composed_fact( Condition1 )
-%%     ;
-%%     composed_fact( Condition2 ).
