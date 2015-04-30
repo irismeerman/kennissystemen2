@@ -12,24 +12,20 @@
 
 ask:-
     read(UserInput),
-    parse(UserInput, Rewritten),
-    checkDuplicates(Rewritten), !, 
-    assert(URewritten),
+    parse(UserInput), !,
     trans,
     prettyPrint.
-
-parse(relation(X after Y), relation(Y before X)).
-
-
 
 ask:-
 	write('Dit staat al in de knowledgebase. Probeer opnieuw.\n').
 
-operators([after, before, concurrent]).
+parse(relation(X after Y)):-
+	checkDuplicates(relation(Y before X)), !, 
+  	assert(relation(Y before X)).	
 
-is_operator(X):-
-	operators(List),
-	member(X, List), !.
+parse(UserInput):-
+  	checkDuplicates(UserInput), !, 
+  	assert(UserInput).
 
 trans:-
 	event(X), event(Y), event(Z),
@@ -44,18 +40,35 @@ trans:-
 trans:-
 	event(X), event(Y), event(Z),
 	X \= Y, X \= Z, Y \= Z,
-	relation((X after Y)),
-	relation((Y after Z)),
-	checkDuplicates(relation(X before Z)),
-	assert(relation(X before Z)),
-	write(relation(X before Z)),
+	relation((X concurrent Y)),
+	relation((Y concurrent Z)),
+	checkDuplicates(relation(X concurrent Z)), !, 
+	assert(relation(X concurrent Z)),
+	write(relation(X concurrent Z)),
 	write(' is toegevoegd aan de database.\n') ,!, trans. 
 
 trans:-
 	write('Geen transitieve relaties meer om toe te voegen.\n'), !.
 
 checkDuplicates(Input):-
-	\+ Input.
+	\+ Input,
+	((Input = relation(X concurrent Y),
+		\+ relation(Y concurrent X))
+	;  
+	Input = relation(X after Y)
+	;
+	Input = relation(X before Y)
+	;
+	Input = relation(X before_or_concurrent Y)
+	;
+	Input = relation(X concurrent_or_after Y)
+	;
+	Input = event(X)).
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%% PRINT FUNCTIES %%%%%%%%%%%%%%%%%%%%%%%%%
 
 prettyPrint:-
 	findall(X, relation(X), Lijst),
@@ -69,15 +82,10 @@ rewrite(X before Y):-
 	write(X),
 	write(' - '),
 	write(Y), nl.
-
-rewrite(X after Y):-
-	write(Y),
-	write(' - '),
-	write(X), nl.
 	
 rewrite(X concurrent Y):-
 	write(X),
-	write(', '),
+	write(','),
 	write(Y), nl.
 
 rewrite(X before_or_concurrent Y):-
@@ -106,32 +114,3 @@ go2:-
 	trans,
 	prettyPrint.
 
-
-
-/* --- A simple forward chaining rule interpreter --- */
-
-%% forward:-
-%%     new_derived_fact( P ),
-%%     !,
-%%     write( 'Derived:' ), write_ln( P ),
-%%     assert( fact( P )),
-%%     forward
-%%     ;
-%%     nl.
-
-%% new_derived_fact( Conclusion ):-
-%%     if Condition then Conclusion,
-%%     not( fact( Conclusion ) ),
-%%     composed_fact( Condition ).
-
-%% composed_fact( Condition ):-
-%%     fact( Condition ).
-
-%% composed_fact( Condition1 and Condition2 ):-
-%%     composed_fact( Condition1 ),
-%%     composed_fact( Condition2 ).
-
-%% composed_fact( Condition1 or Condition2 ):-
-%%     composed_fact( Condition1 )
-%%     ;
-%%     composed_fact( Condition2 ).
