@@ -28,6 +28,37 @@ ask:-
 ask:-
 	write('Dit staat al in de knowledgebase. Probeer opnieuw.\n').
 
+% before gaat alle before relaties in een lijst zetten in de goede
+% volgorde. Daarvoor gebruikt hij rightsequence. Before gebruikt 1 argument,
+% dat is dus het argument wat hij teruggeeft/print als je before(X) vraagt in 
+% de terminal.
+before(CompleteList):-
+	findall([X,Y], relation(X before Y), Befores),
+	%write(Befores), nl,
+	rightSequence(Befores, CompleteList),
+	write(CompleteList).
+
+% rightsequence checkt of de eerste before relatie X before Y dezelfde
+% Y heeft als waar de volgende relatie mee begint. Indien dat het geval is,
+% voegt hij de X en Y toe aan de Complete Lijst. Hij gaat vervolgens verder met
+% de volgende relaties in de lijst.
+rightSequence([Relation,Relation2 | [Tail]], CompleteList):-
+	write(Relation),
+	Relation = [X,Y],
+	Relation2 = [Y,_],
+	append([X], CompleteList, CompleteList),
+	append([Y], CompleteList, CompleteList),
+	rightSequence([Relation2 | Tail], CompleteList).
+
+% Als de lijst leeg is hoeft ie niets te doen.
+rightSequence([], _).
+
+% Als de volgende relatie niet met hetzelfde element begint als waar de
+% vorige relatie mee eindigde (zoals in rightsequence hierboven), dan moet je de
+% relatie overslaan (dus dit slaat transitief toegevoegde relaties over).
+rightSequence([_, Relation2 | [Tail]], CompleteList):-
+	rightSequence([Relation2 | [Tail]], CompleteList).
+
 % zet 'after'-input om naar 'before' input en voeg toe aan knowledgebase.
 parse(relation(X after Y)):-
 	checkDuplicates(relation(Y before X)), !, 
