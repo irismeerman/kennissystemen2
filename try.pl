@@ -1,6 +1,14 @@
 % Kennissystemen opdracht 4
 % Common Sense Reasoning
 
+% Idee: 
+% 1. Verzamel alle 'before' relaties (findall)
+% 2. Zet alle gevonden events in een lijst (a before b. b before c wordt([a,b,c]))
+% 3. Remove dubbele events in de lijst somehow
+% 4. Verzamel alle 'concurrent' relaties (findall)
+% 5. Op iedere plek waar een element staat dat voorkomt in een 'concurrent' predicaat,
+% 	 plaats daar een lijst met de concurrent events.
+
 :- op(700, xfx, before).
 :- op(700, xfx, after).
 :- op(700, xfx, concurrent).
@@ -10,16 +18,51 @@
 :- dynamic(event/1).
 :- dynamic(relation/1).
 
+% ask\0 is het start predicaat voor het invoegen van kennis aan de knowledgebase.
 ask:-
     read(UserInput),
-    checkDuplicates(UserInput), !, 
-    assert(UserInput),
+    parse(UserInput), !,
     trans,
     prettyPrint.
 
 ask:-
 	write('Dit staat al in de knowledgebase. Probeer opnieuw.\n').
 
+before(CompleteList):-
+	findall([X,Y], relation(X before Y), Befores),
+	write(Befores), nl,
+	rightSequence(Befores, CompleteList).
+
+rightSequence([Relation,Relation2 | [Tail]], CompleteList):-
+	Relation = [X,Y],
+	Relation2 = [Y,_],
+	append([X], CompleteList, NewList),
+	append(NewList, [Y], NewList2),
+	rightSequence([Relation2 | [Tail]], NewList2).
+
+rightSequence([_, Relation2 | [Tail]], CompleteList):-
+	rightSequence([Relation2 | [Tail]], CompleteList).
+
+rightSequence([[X,Y],[Y,_]], C):-
+	append([X], C, New),
+	append(New, [Y], NewList2).
+
+rightSequence([[X,Y],[O,P]], CompleteList):-
+	rightSequence([], CompleteList).
+
+rightSequence([], _).
+
+% parse\1 zet 'after'-input om naar 'before' input en voeg toe aan knowledgebase.
+parse(relation(X after Y)):-
+	checkDuplicates(relation(Y before X)), !, 
+  	assert(relation(Y before X)).	
+
+% parse\1 checkt of de input al in de knowledgebase staat.
+parse(UserInput):-
+  	checkDuplicates(UserInput), !, 
+  	assert(UserInput).
+
+% trans\0 past transiviteitsregel toe op before events
 trans:-
 	event(X), event(Y), event(Z),
 	X \= Y, X \= Z, Y \= Z,
@@ -30,11 +73,41 @@ trans:-
 	write(relation(X before Z)),
 	write(' is toegevoegd aan de database.\n') ,!, trans. 
 
+% trans\0 past transiviteitsregel toe op concurrent events
 trans:-
-	write('Geen transitieve relaties toegevoegd.\n'), !.
+	event(X), event(Y), event(Z),
+	X \= Y, X \= Z, Y \= Z,
+	relation((X concurrent Y)),
+	relation((Y concurrent Z)),
+	checkDuplicates(relation(X concurrent Z)), !, 
+	assert(relation(X concurrent Z)),
+	write(relation(X concurrent Z)),
+	write(' is toegevoegd aan de database.\n') ,!, trans. 
 
+trans:-
+	write('Geen transitieve relaties meer om toe te voegen.\n'), !.
+
+% chechDuplicates\1 kijkt of de input al in de knowledgebase staat en of het een geldige
+% input regel is.
 checkDuplicates(Input):-
-	\+ Input.
+	\+ Input,
+	((Input = relation(X concurrent Y),
+		\+ relation(Y concurrent X))
+	;  
+	Input = relation(X after Y)
+	;
+	Input = relation(X before Y)
+	;
+	Input = relation(X before_or_concurrent Y)
+	;
+	Input = relation(X concurrent_or_after Y)
+	;
+	Input = event(X)).
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%% PRINT FUNCTIES %%%%%%%%%%%%%%%%%%%%%%%%%
 
 prettyPrint:-
 	findall(X, relation(X), Lijst),
@@ -47,24 +120,23 @@ prettyPrint2([ Rel1 | Relaties] ):-
 rewrite(X before Y):-
 	write(X),
 	write(' - '),
-	write(Y).
-
-rewrite(X after Y):-
-	retract(X after Y),
-	assert(relation(X before Y)).
-
+	write(Y), nl.
+	
 rewrite(X concurrent Y):-
 	write(X),
-	write(', '),
-	write(Y).
+	write(','),
+	write(Y), nl.
 
 rewrite(X before_or_concurrent Y):-
-	rewrite(X before Y), nl,
+	rewrite(X before Y),
 	rewrite(X concurrent Y).
 
 rewrite(X concurrent_or_after Y):-
-	rewrite(X concurrent Y), nl,
+	rewrite(X concurrent Y), 
 	rewrite(X after Y).
+
+%%%%%%%%%%%%%%%%%%%%% BUILD IN INFO %%%%%%%%%%%%%%%%%%%
+
 
 go1:-
 	assert(event('a')),
