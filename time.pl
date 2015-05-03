@@ -18,14 +18,14 @@
 :- dynamic(event/1).
 :- dynamic(relation/1).
 
-% ask\0 is het start predicaat voor het invoegen van kennis aan de knowledgebase.
-ask:-
+% point\0 is het start predicaat voor het invoegen van kennis aan de knowledgebase.
+point:-
     read(UserInput),
     parse(UserInput), !,
     trans,
     prettyPrint.
 
-ask:-
+point:-
 	write('Dit staat al in de knowledgebase. Probeer opnieuw.\n').
 
 % before\1 gaat alle before relaties in een lijst zetten in de goede
