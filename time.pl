@@ -18,7 +18,7 @@
 :- dynamic(event/1).
 :- dynamic(relation/1).
 
-% start predicaat voor het invoegen van kennis aan de knowledgebase.
+% ask\0 is het start predicaat voor het invoegen van kennis aan de knowledgebase.
 ask:-
     read(UserInput),
     parse(UserInput), !,
@@ -28,7 +28,7 @@ ask:-
 ask:-
 	write('Dit staat al in de knowledgebase. Probeer opnieuw.\n').
 
-% before gaat alle before relaties in een lijst zetten in de goede
+% before\1 gaat alle before relaties in een lijst zetten in de goede
 % volgorde. Daarvoor gebruikt hij rightsequence. Before gebruikt 1 argument,
 % dat is dus het argument wat hij teruggeeft/print als je before(X) vraagt in 
 % de terminal.
@@ -38,20 +38,18 @@ before(CompleteList):-
 	rightSequence(Befores, CompleteList),
 	write(CompleteList).
 
-% rightsequence checkt of de eerste before relatie X before Y dezelfde
+% rightsequence\2 checkt of de eerste before relatie X before Y dezelfde
 % Y heeft als waar de volgende relatie mee begint. Indien dat het geval is,
 % voegt hij de X en Y toe aan de Complete Lijst. Hij gaat vervolgens verder met
 % de volgende relaties in de lijst.
 rightSequence([Relation,Relation2 | [Tail]], CompleteList):-
+	write("absadjfaf"), nl,
 	write(Relation),
 	Relation = [X,Y],
 	Relation2 = [Y,_],
-	append([X], CompleteList, CompleteList),
-	append([Y], CompleteList, CompleteList),
+	append(X, CompleteList, CompleteList),
+	append(Y, CompleteList, CompleteList),
 	rightSequence([Relation2 | Tail], CompleteList).
-
-% Als de lijst leeg is hoeft ie niets te doen.
-rightSequence([], _).
 
 % Als de volgende relatie niet met hetzelfde element begint als waar de
 % vorige relatie mee eindigde (zoals in rightsequence hierboven), dan moet je de
@@ -59,17 +57,20 @@ rightSequence([], _).
 rightSequence([_, Relation2 | [Tail]], CompleteList):-
 	rightSequence([Relation2 | [Tail]], CompleteList).
 
-% zet 'after'-input om naar 'before' input en voeg toe aan knowledgebase.
+% Als de lijst leeg is hoeft rightSequence\2 niets te doen.
+rightSequence([], _).
+
+% parse\1 zet 'after'-input om naar 'before' input en voeg toe aan knowledgebase.
 parse(relation(X after Y)):-
 	checkDuplicates(relation(Y before X)), !, 
   	assert(relation(Y before X)).	
 
-% check of de input al in de knowledgebase staat.
+% parse\1 checkt of de input al in de knowledgebase staat.
 parse(UserInput):-
   	checkDuplicates(UserInput), !, 
   	assert(UserInput).
 
-% pas transiviteitsregel toe op before events
+% trans\0 past transiviteitsregel toe op before events
 trans:-
 	event(X), event(Y), event(Z),
 	X \= Y, X \= Z, Y \= Z,
@@ -80,7 +81,7 @@ trans:-
 	write(relation(X before Z)),
 	write(' is toegevoegd aan de database.\n') ,!, trans. 
 
-% pas transiviteitsregel toe op concurrent events
+% trans\0 past transiviteitsregel toe op concurrent events
 trans:-
 	event(X), event(Y), event(Z),
 	X \= Y, X \= Z, Y \= Z,
@@ -94,7 +95,7 @@ trans:-
 trans:-
 	write('Geen transitieve relaties meer om toe te voegen.\n'), !.
 
-% kijk of de input al in de knowledgebase staat en of het een geldige
+% chechDuplicates\1 kijkt of de input al in de knowledgebase staat en of het een geldige
 % input regel is.
 checkDuplicates(Input):-
 	\+ Input,
