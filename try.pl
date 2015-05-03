@@ -31,7 +31,8 @@ ask:-
 before(CompleteList):-
 	findall([X,Y], relation(X before Y), Befores),
 	write(Befores), nl,
-	rightSequence(Befores, CompleteList).
+	rightSequence(Befores, CompleteList),
+	write(CompleteList).
 
 rightSequence([Relation,Relation2 | [Tail]], CompleteList):-
 	Relation = [X,Y],
@@ -47,7 +48,8 @@ rightSequence([[X,Y],[Y,_]], C):-
 	append([X], C, New),
 	append(New, [Y], NewList2).
 
-rightSequence([[X,Y],[O,P]], CompleteList):-
+rightSequence([[_,Y],[O,_]], CompleteList):-
+	Y \= O,
 	rightSequence([], CompleteList).
 
 rightSequence([], _).

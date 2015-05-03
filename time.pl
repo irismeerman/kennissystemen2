@@ -34,17 +34,17 @@ ask:-
 % de terminal.
 before(CompleteList):-
 	findall([X,Y], relation(X before Y), Befores),
-	%write(Befores), nl,
-	rightSequence(Befores, CompleteList),
-	write(CompleteList).
+	write(Befores), nl,
+	rightSequence(Befores, CompleteList).
+	%write(CompleteList).
 
 % rightsequence\2 checkt of de eerste before relatie X before Y dezelfde
 % Y heeft als waar de volgende relatie mee begint. Indien dat het geval is,
 % voegt hij de X en Y toe aan de Complete Lijst. Hij gaat vervolgens verder met
 % de volgende relaties in de lijst.
 rightSequence([Relation,Relation2 | [Tail]], CompleteList):-
-	write("absadjfaf"), nl,
-	write(Relation),
+	%write("absadjfaf"), nl,
+	%write(Relation),
 	Relation = [X,Y],
 	Relation2 = [Y,_],
 	append(X, CompleteList, CompleteList),
