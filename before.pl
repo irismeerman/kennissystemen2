@@ -1,14 +1,11 @@
 % Kennissystemen opdracht 4
 % Common Sense Reasoning
+%
+% Iris Meerman
+% Arend van Dormalen
 
-% Idee: 
-% 1. Verzamel alle 'before' relaties (findall)
-% 2. Zet alle gevonden events in een lijst (a before b. b before c wordt([a,b,c]))
-% 3. Remove dubbele events in de lijst somehow
-% 4. Verzamel alle 'concurrent' relaties (findall)
-% 5. Op iedere plek waar een element staat dat voorkomt in een 'concurrent' predicaat,
-% 	 plaats daar een lijst met de concurrent events.
 
+% Aanmaken van verschillende operatoren voor types relaties
 :- op(700, xfx, before).
 :- op(700, xfx, after).
 :- op(700, xfx, concurrent).
@@ -18,29 +15,32 @@
 :- dynamic(event/1).
 :- dynamic(relation/1).
 
-% ask\0 is het start predicaat voor het invoegen van kennis aan de knowledgebase.
-ask:-
+% point\0 is het start predicaat voor het invoegen van kennis aan de knowledgebase.
+point:-
     read(UserInput),
     parse(UserInput), !,
     trans,
-    prettyPrint.
+    timePrint.
 
-ask:-
+% point\0 faalt als een event of relaties al in de database staat, dan wordt deze
+% case aangeroepen.
+point:-
 	write('Dit staat al in de knowledgebase. Probeer opnieuw.\n').
 
-% Before/0 zoekt alle before-relaties en gaat alle elementen in één lijst zetten.
+% Before\0 zoekt alle before-relaties en gaat alle elementen in één lijst zetten.
 % Er geldt wel de voorwaarde dat de relaties in de goede volgorde moeten worden ingegeven.
 before:-
 	findall([X,Y], relation(X before Y), Befores),
-	Befores = [[Elem1, Elem2] | T],
+	Befores = [[Elem1, Elem2] | _],
 	goodList(Befores, [Elem1, Elem2]).
 
-goodList([X, []], _).
+% Basecase goodList\2
+goodList([_, []], _).
 
 % Hier controleert hij of de voorgaande relatie eindigt met hetzelfde waar de volgende
 % relatie mee begint en voegt het volgende element dan toe aan de lijst.
 goodList(Befores, CompleteList):-
-	Befores = [[D,X], [X,Y] | T],
+	Befores = [[_,X], [X,Y] | T],
 	append(CompleteList, [Y], NewComplete),
 	write(NewComplete),
 	goodList([[X,Y] | T], NewComplete).
@@ -48,7 +48,7 @@ goodList(Befores, CompleteList):-
 % Als de nieuwe relatie in inhaakt op de voorgaande relatie, dan sla je hem over (op deze
 % manier haal je dus de transitieve relaties er uit)
 goodList(Befores, CompleteList):-
-	Befores = [[O, P], [X, Y] | T],
+	Befores = [_, [X, Y] | T],
 	goodList([ [X,Y] | T], CompleteList).
 
 
@@ -85,14 +85,20 @@ checkDuplicates(Input):-
 
 %%%%%%%%%%%%%%%%%%%%%%% PRINT FUNCTIES %%%%%%%%%%%%%%%%%%%%%%%%%
 
-prettyPrint:-
-	findall(X, relation(X), Lijst),
-	prettyPrint2(Lijst).
 
-prettyPrint2([ Rel1 | Relaties] ):-
+% timePrint\0 vind alle relaties tussen events en stopt deze in een lijst
+timePrint:-
+	findall(X, relation(X), Lijst),
+	timePrint2(Lijst).
+
+% timePrint2\0 gaat recursief door de lijst van relaties heen en print de inhoud
+timePrint2([ Rel1 | Relaties] ):-
 	rewrite(Rel1),
-	prettyPrint2(Relaties).
-	
+	timePrint2(Relaties).
+
+
+% rewrite\1 schrijft relaties om naar een grafische weergave, die deel van een tijdlijn uit kan maken
+
 rewrite(X before Y):-
 	write(X),
 	write(' - '),
@@ -113,7 +119,7 @@ rewrite(X concurrent_or_after Y):-
 
 %%%%%%%%%%%%%%%%%%%%% BUILD IN INFO %%%%%%%%%%%%%%%%%%%
 
-
+% First small knowledgebase
 go1:-
 	assert(event('a')),
 	assert(event('b')),
@@ -121,16 +127,17 @@ go1:-
 	assert(relation(a before b)),
 	assert(relation(b before c)),
 	trans,
-	prettyPrint.
+	timePrint.
 
+% Second small knowledgebase
 go2:-
-	assert(event('a')),
-	assert(event('b')),
-	assert(event('c')),
-	assert(relation(b after a)),
-	assert(relation(b concurrent c)),
+	assert(event('d')),
+	assert(event('e')),
+	assert(event('f')),
+	assert(relation(e after d)),
+	assert(relation(e concurrent f)),
 	trans,
-	prettyPrint.
+	timePrint.
 
 
 % trans\0 past transiviteitsregel toe op before events
@@ -155,5 +162,7 @@ trans:-
 	write(relation(X concurrent Z)),
 	write(' is toegevoegd aan de database.\n') ,!, trans. 
 
+% Wanneer beide gevallen niet waar zijn, is er een melding dat er geen 
+% relaties over zijn. Deze case is altijd waar.
 trans:-
 	write('Geen transitieve relaties meer om toe te voegen.\n'), !.
