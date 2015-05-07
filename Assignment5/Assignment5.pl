@@ -11,8 +11,8 @@ go :-
 	calc_values(M1, M2, M3, A1, A2),
 	write('Please enter actual outputs in a list: [value1, value2]'), nl,
 	read([Val1, Val2]),
-	\+ check_values(Val1, Val2, A1, A2),
-	
+	check_values(Val1, Val2, A1, A2, [], List),
+	write(List)
 	.
 
 
@@ -47,9 +47,15 @@ is_multiplier(X) :-
 
 % Finding discrepancies
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-check_values(Val1, Val2, A1, A2) :-
-	Val1 = A1,
-	Val2 = A2,
+check_values(Val1, Val2, A1, A2, List, OutputList) :-
+	((
+	\+ Val1 = A1,
+	append([Val1], List, OutputList1)
+	);(
+	\+ Val2 = A2,
+	append([Val2], List, OutputList2)
+	)),
+	append(OutputList1, OutputList2, OutputList),
 	write('No problems encountered.').
 
 % Factbase
